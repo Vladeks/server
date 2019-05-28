@@ -50,6 +50,8 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
 
     public static final String DEBUGTAG = "DEBUG_VC";
     GoogleMap mMap;
+    LocationManager lm;
+    String bestProvider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,18 +70,14 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
             Log.d(DEBUGTAG, "Longitude for 1: " + longitude);
             Log.d(DEBUGTAG, "Latitude for 1: " + latitude);
         } else {
-            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             try {
                 Criteria criteria = new Criteria();
-                String bestProvider = lm.getBestProvider(criteria, false);
-                if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
+                bestProvider = lm.getBestProvider(criteria, false);
+                if (ActivityCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                        && ActivityCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     return;
                 }
                 Location location = lm.getLastKnownLocation(bestProvider);
@@ -88,11 +86,12 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
                 latitude = location.getLatitude();
                 Log.d(DEBUGTAG, "Longitude for 2: " + longitude);
                 Log.d(DEBUGTAG, "Latitude for 2: " + latitude);
-            }catch(Exception ex){
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
-        ((MapFragment)getFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
+        ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
+
 
         final LatLng coordinate = new LatLng(latitude, longitude);                                     //LatLng coordinate = new LatLng(43.4619415152536, -80.5222363389286);
         Log.d(DEBUGTAG, "1---------------------");
@@ -101,12 +100,13 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
         final ArrayList<LocationData> locationData;
         final ProgressDialog dialog = new ProgressDialog(MainActivity.this);
         try {
-            new AsyncTask<Void, Void, Void>(){
+            new AsyncTask<Void, Void, Void>() {
                 @Override
                 protected void onPreExecute() {
                     dialog.setMessage("Processing...");
                     dialog.show();
                 }
+
                 protected Void doInBackground(Void... params) {
                     Log.d(DEBUGTAG, "2---------------------");
                     ParkingFinder parkingFinder = new ParkingFinder();
@@ -115,6 +115,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
                     Log.d(DEBUGTAG, "3---------------------");
                     return null;
                 }
+
                 @Override
                 protected void onPostExecute(Void aVoid) {
                     dialog.dismiss();
@@ -126,7 +127,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
 
         locationData = bulkData.getBulkData();
         Log.d(DEBUGTAG, "Size: " + locationData.size());
-        for(final LocationData locData : locationData){
+        for (final LocationData locData : locationData) {
             MarkerOptions mOptions = new MarkerOptions();
             mOptions.title(locData.getAddress());
             mOptions.snippet("SELECT");
@@ -158,6 +159,14 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-//        googleMap.setMyLocationEnabled(true)
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        if( bestProvider == null) {
+            Criteria criteria = new Criteria();
+            bestProvider = lm.getBestProvider(criteria, false);
+        }
+        googleMap.setMyLocationEnabled(true);
+        googleMap.setLocationSource(n);
     }
 }
