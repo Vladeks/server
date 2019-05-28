@@ -167,6 +167,6 @@ public class MainActivity extends Activity implements OnMapReadyCallback {
             bestProvider = lm.getBestProvider(criteria, false);
         }
         googleMap.setMyLocationEnabled(true);
-        googleMap.setLocationSource(n);
+//        googleMap.setLocationSource();
     }
 }
