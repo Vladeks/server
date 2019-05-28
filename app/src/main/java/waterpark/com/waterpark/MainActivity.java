@@ -4,11 +4,13 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,10 +23,12 @@ import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
 import android.location.Location;
 import android.widget.RadioButton;
 import android.widget.Toast;
@@ -42,9 +46,10 @@ import waterloo.com.core.LocationData;
 import waterloo.com.core.ParkingFinder;
 import waterpark.com.waterpark.R;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements OnMapReadyCallback {
 
     public static final String DEBUGTAG = "DEBUG_VC";
+    GoogleMap mMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,17 +62,26 @@ public class MainActivity extends Activity {
         double longitude = 0.0;
         double latitude = 0.0;
 
-        if(searchType == 1){
+        if (searchType == 1) {
             longitude = getIntent().getExtras().getDouble("longitude");
             latitude = getIntent().getExtras().getDouble("latitude");
             Log.d(DEBUGTAG, "Longitude for 1: " + longitude);
             Log.d(DEBUGTAG, "Latitude for 1: " + latitude);
-        }
-        else{
-            LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-            try{
+        } else {
+            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            try {
                 Criteria criteria = new Criteria();
                 String bestProvider = lm.getBestProvider(criteria, false);
+                if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
                 Location location = lm.getLastKnownLocation(bestProvider);
 
                 longitude = location.getLongitude();
@@ -78,7 +92,7 @@ public class MainActivity extends Activity {
                 ex.printStackTrace();
             }
         }
-        final GoogleMap mMap = ((MapFragment)getFragmentManager().findFragmentById(R.id.map)).getMap();
+        ((MapFragment)getFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
 
         final LatLng coordinate = new LatLng(latitude, longitude);                                     //LatLng coordinate = new LatLng(43.4619415152536, -80.5222363389286);
         Log.d(DEBUGTAG, "1---------------------");
@@ -139,5 +153,11 @@ public class MainActivity extends Activity {
         }
         CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 16);
         mMap.animateCamera(yourLocation);
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+//        googleMap.setMyLocationEnabled(true)
     }
 }
